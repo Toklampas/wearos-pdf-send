@@ -13,3 +13,5 @@
 .externalNativeBuild
 .cxx
 local.properties
+wear/build/intermediates/built_in_kotlinc/debug/compileDebugKotlin/classes/com/toklampas/pdfsender/ReceiveUiState$Receiving.class
+/wear/build
