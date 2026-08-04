@@ -3,13 +3,19 @@ package com.toklampas.pdfsender.ui.main
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.LinearProgressIndicator
@@ -54,7 +60,10 @@ fun MainScreen(
         Spacer(modifier = Modifier.height(32.dp))
 
         Button(
-            onClick = { pdfPickerLauncher.launch("application/pdf") },
+            onClick = { 
+                viewModel.preLaunchWatchApp(context)
+                pdfPickerLauncher.launch("application/pdf") 
+            },
             enabled = state is SendUiState.Idle || state is SendUiState.Success || state is SendUiState.Error
         ) {
             Text("Select PDF to Send")
@@ -96,6 +105,17 @@ fun MainScreen(
                 )
                 Button(onClick = { viewModel.resetState() }, modifier = Modifier.padding(top = 16.dp)) {
                     Text("Send Another")
+                }
+            }
+            is SendUiState.WatchNotOpen -> {
+                Text(
+                    text = "Watch app could not be opened automatically.\nPlease ensure your watch is connected and open PdfSender manually.",
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
+                Button(onClick = { viewModel.resetState() }, modifier = Modifier.padding(top = 16.dp)) {
+                    Text("OK")
                 }
             }
             is SendUiState.Error -> {

@@ -53,6 +53,9 @@ dependencies {
   implementation(libs.androidx.compose.ui.tooling.preview)
   debugImplementation(libs.androidx.compose.ui.tooling)
 
+  // Standard Compose
+  implementation(libs.androidx.compose.material3)
+
   // Wear OS Compose
   implementation(libs.wear.compose.material3)
   implementation(libs.wear.compose.foundation)

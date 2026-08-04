@@ -4,10 +4,10 @@
     <selectionStates>
       <SelectionState runConfigName="wear">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2026-08-03T16:51:11.344808300Z">
+        <DropdownSelection timestamp="2026-08-04T13:12:15.756983300Z">
           <Target type="DEFAULT_BOOT">
             <handle>
-              <DeviceId pluginId="Wireless" identifier="serviceName=adb-RFAW72JMGCX-XMCusL (2)" />
+              <DeviceId pluginId="PhysicalDevice" identifier="serial=R5CW61GDGBX" />
             </handle>
           </Target>
         </DropdownSelection>
@@ -15,10 +15,10 @@
       </SelectionState>
       <SelectionState runConfigName="app">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2026-08-03T16:52:42.675813200Z">
+        <DropdownSelection timestamp="2026-08-04T12:53:40.120294600Z">
           <Target type="DEFAULT_BOOT">
             <handle>
-              <DeviceId pluginId="PhysicalDevice" identifier="serial=RFAW72JMGCX" />
+              <DeviceId pluginId="PhysicalDevice" identifier="serial=R5CW61GDGBX" />
             </handle>
           </Target>
         </DropdownSelection>

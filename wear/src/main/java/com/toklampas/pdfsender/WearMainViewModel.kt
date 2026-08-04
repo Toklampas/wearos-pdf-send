@@ -9,6 +9,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.android.gms.wearable.ChannelClient
 import com.google.android.gms.wearable.Wearable
+import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -28,8 +29,11 @@ class WearMainViewModel(application: Application) : AndroidViewModel(application
     private val channelCallback = object : ChannelClient.ChannelCallback() {
         override fun onChannelOpened(channel: ChannelClient.Channel) {
             if (channel.path.startsWith("/pdf-transfer/")) {
-                val fileName = channel.path.substringAfterLast("/")
-                receiveFile(channel, fileName)
+                val parts = channel.path.split("/")
+                val fileName = parts.getOrNull(2) ?: "document.pdf"
+                val fileSizeStr = parts.getOrNull(3) ?: "-1"
+                val fileSize = fileSizeStr.toLongOrNull() ?: -1L
+                receiveFile(channel, fileName, fileSize)
             }
         }
     }
@@ -43,9 +47,9 @@ class WearMainViewModel(application: Application) : AndroidViewModel(application
         channelClient.unregisterChannelCallback(channelCallback)
     }
 
-    private fun receiveFile(channel: ChannelClient.Channel, fileName: String) {
+    private fun receiveFile(channel: ChannelClient.Channel, fileName: String, fileSize: Long) {
         viewModelScope.launch {
-            _uiState.value = ReceiveUiState.Receiving(fileName, 0f)
+            _uiState.value = ReceiveUiState.Receiving(fileName, 0f, 0L, fileSize)
             
             withContext(Dispatchers.IO) {
                 try {
@@ -82,11 +86,8 @@ class WearMainViewModel(application: Application) : AndroidViewModel(application
                     }
 
                     try {
-                        copyStreamWithProgress(inputStream, outputStream) { progress ->
-                            // We don't know total size natively from channel unless we send it, 
-                            // so we will just show indeterminate progress or byte count
-                            // For simplicity, we just pass the bytes copied as a float for now
-                            _uiState.value = ReceiveUiState.Receiving(fileName, progress)
+                        copyStreamWithProgress(inputStream, outputStream, fileSize) { progress, copied, total ->
+                            _uiState.value = ReceiveUiState.Receiving(fileName, progress, copied, total)
                         }
                         _uiState.value = ReceiveUiState.Success(fileName)
                     } finally {
@@ -105,7 +106,8 @@ class WearMainViewModel(application: Application) : AndroidViewModel(application
     private suspend fun copyStreamWithProgress(
         inputStream: InputStream,
         outputStream: OutputStream,
-        onProgress: (Float) -> Unit
+        totalBytes: Long,
+        onProgress: (Float, Long, Long) -> Unit
     ) {
         val buffer = ByteArray(8 * 1024)
         var bytesCopied = 0L
@@ -113,9 +115,12 @@ class WearMainViewModel(application: Application) : AndroidViewModel(application
         while (bytesRead >= 0) {
             outputStream.write(buffer, 0, bytesRead)
             bytesCopied += bytesRead
-            // Since we don't know the file size from the watch side immediately,
-            // we will pass the MB downloaded to the UI instead of a percentage (0-1)
-            onProgress(bytesCopied.toFloat() / (1024f * 1024f)) 
+            if (totalBytes > 0) {
+                val progress = (bytesCopied.toFloat() / totalBytes.toFloat()).coerceIn(0f, 1f)
+                onProgress(progress, bytesCopied, totalBytes)
+            } else {
+                onProgress(-1f, bytesCopied, totalBytes)
+            }
             bytesRead = inputStream.read(buffer)
         }
         outputStream.flush()
@@ -128,7 +133,7 @@ class WearMainViewModel(application: Application) : AndroidViewModel(application
 
 sealed interface ReceiveUiState {
     object Waiting : ReceiveUiState
-    data class Receiving(val fileName: String, val mbReceived: Float) : ReceiveUiState
+    data class Receiving(val fileName: String, val progress: Float, val bytesCopied: Long, val totalBytes: Long) : ReceiveUiState
     data class Success(val fileName: String) : ReceiveUiState
     data class Error(val message: String) : ReceiveUiState
 }
