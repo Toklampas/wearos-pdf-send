@@ -5,8 +5,8 @@ PdfSender is an Android application that allows you to seamlessly send PDF docum
 ## Features
 
 - **Simple File Selection:** Pick any PDF document from your phone's storage.
-- **Auto-Launch on Watch:** Automatically launches the companion app on your Wear OS watch when you initiate a transfer.
-- **Progress Tracking:** See real-time transfer progress on your phone.
+- **Launch Watch App:** Open the companion app on your Wear OS watch directly from your phone with a single tap.
+- **Progress Tracking:** See real-time transfer progress on both your phone and watch.
 - **Wear OS Companion App:** A dedicated Wear OS app to receive and handle the transferred PDF documents.
 
 ## How It Works

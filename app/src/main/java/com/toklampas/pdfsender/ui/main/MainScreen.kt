@@ -3,23 +3,18 @@ package com.toklampas.pdfsender.ui.main
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -59,9 +54,17 @@ fun MainScreen(
         )
         Spacer(modifier = Modifier.height(32.dp))
 
+        OutlinedButton(
+            onClick = { viewModel.openWatchApp(context) },
+            enabled = state !is SendUiState.Connecting && state !is SendUiState.Sending
+        ) {
+            Text("Open Watch App")
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
         Button(
             onClick = { 
-                viewModel.preLaunchWatchApp(context)
                 pdfPickerLauncher.launch("application/pdf") 
             },
             enabled = state is SendUiState.Idle || state is SendUiState.Success || state is SendUiState.Error
@@ -109,7 +112,7 @@ fun MainScreen(
             }
             is SendUiState.WatchNotOpen -> {
                 Text(
-                    text = "Watch app could not be opened automatically.\nPlease ensure your watch is connected and open PdfSender manually.",
+                    text = "Watch app is not open.\nPlease ensure your watch is connected and open PdfSender (or tap 'Open Watch App') before sending.",
                     textAlign = TextAlign.Center,
                     color = MaterialTheme.colorScheme.error,
                     modifier = Modifier.padding(horizontal = 16.dp)

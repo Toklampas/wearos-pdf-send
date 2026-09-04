@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.Uri
 import android.provider.OpenableColumns
 import android.util.Log
+import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.android.gms.wearable.Wearable
@@ -16,7 +17,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
-import kotlinx.coroutines.delay
 import java.io.InputStream
 import java.io.OutputStream
 
@@ -25,10 +25,7 @@ class MainScreenViewModel : ViewModel() {
     private val _uiState = MutableStateFlow<SendUiState>(SendUiState.Idle)
     val uiState: StateFlow<SendUiState> = _uiState.asStateFlow()
 
-    private var launchStartTime: Long = 0
-
-    fun preLaunchWatchApp(context: Context) {
-        launchStartTime = System.currentTimeMillis()
+    fun openWatchApp(context: Context) {
         viewModelScope.launch {
             try {
                 val nodeClient = Wearable.getNodeClient(context)
@@ -39,9 +36,19 @@ class MainScreenViewModel : ViewModel() {
                     Wearable.getMessageClient(context)
                         .sendMessage(watchNode.id, "/launch-app", byteArrayOf())
                         .await()
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(context, "Opening app on ${watchNode.displayName}...", Toast.LENGTH_SHORT).show()
+                    }
+                } else {
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(context, "No connected watch found", Toast.LENGTH_SHORT).show()
+                    }
                 }
             } catch (e: Exception) {
-                // Ignore errors during pre-launch
+                Log.e("PdfSender", "Failed to launch watch app", e)
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(context, "Failed to launch watch app: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
+                }
             }
         }
     }
@@ -72,19 +79,6 @@ class MainScreenViewModel : ViewModel() {
                     }
                 }
 
-                _uiState.value = SendUiState.Connecting("Launching app on ${watchNode.displayName}...")
-                
-                // Launch watch app (in case pre-launch failed or didn't happen)
-                Wearable.getMessageClient(context)
-                    .sendMessage(watchNode.id, "/launch-app", byteArrayOf())
-                    .await()
-                    
-                // Ensure at least 7 seconds have passed since the "Select PDF" button was clicked
-                val timeSinceLaunch = System.currentTimeMillis() - launchStartTime
-                if (timeSinceLaunch < 7000) {
-                    delay(7000 - timeSinceLaunch)
-                }
-                
                 _uiState.value = SendUiState.Connecting("Connecting to ${watchNode.displayName}...")
 
                 // Open channel with a timeout so we don't hang if the watch app is closed
